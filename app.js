@@ -5,6 +5,7 @@ const sharp = require("sharp");
 const cors = require("cors");
 const { sendEmail } = require("./sendEmail");
 const { getCount, updateCount } = require("./counter");
+const axios = require('axios')
 
 require('dotenv').config();
 const app = express();
@@ -39,7 +40,7 @@ app.get('/count', (req, res) => {
     res.send(getCount());
 })
 
-app.get('/shrinker/:path', (req, res) => {
+app.get('/img/shrinker/:path', (req, res) => {
     let fileName = req.params.path;
     const fileList = fileName.split(".");
     const ext = fileList.pop();
@@ -63,6 +64,30 @@ app.get('/shrinker/:path', (req, res) => {
             res.contentType(ext);
             res.send(data);
         });
+});
+
+app.get('/url/streamer', (req, res) => {
+    const url = req.query.img
+    const w = parseInt(req.query.w)
+    console.log(url)
+    const fileList = url.split(".");
+    const ext = fileList.pop();    
+    const config = {
+        responseType: "arraybuffer",
+        headers: {
+            'Access-Control-Allow-Origin': "*"
+        }
+    }
+    
+    axios(url, config).then(async resp => {
+        const output = await sharp(resp.data)
+            .resize(w)
+            .png()
+            .toBuffer()
+        console.log(ext)
+        res.contentType(ext)
+        res.send(output)
+    })
 });
 
 app.listen(PORT, () =>
